@@ -70,7 +70,7 @@ def sample_index(preds, temperature = 1.0):
     return np.argmax(probas)
 
 # Обучение LSTM модели
-model.fit(X, y, batch_size = 128, epochs = 100)
+model.fit(X, y, batch_size = 128, epochs = 50)
 
 
 
