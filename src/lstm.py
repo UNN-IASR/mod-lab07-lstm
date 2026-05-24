@@ -68,7 +68,7 @@ def generate_text(length, diversity):
             sentence = sentence[1:]
             sentence.append(next_char)
     return generated
-def print_and_log(text, file_path="result.txt"):
+def print_and_log(text, file_path="gen.txt"):
     print(text)
     with open(file_path, "w", encoding="utf-8") as f:
         f.write(text)
