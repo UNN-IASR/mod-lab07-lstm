@@ -1,0 +1,103 @@
+name: Lab07 LSTM Check
+ 
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+ 
+jobs:
+  check:
+    runs-on: ubuntu-latest
+ 
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+ 
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+ 
+      - name: Check required files exist
+        run: |
+          echo "=== Проверка наличия файлов ==="
+          test -f src/lstm.py   && echo "OK: src/lstm.py найден"   || (echo "FAIL: src/lstm.py отсутствует" && exit 1)
+          test -f src/input.txt && echo "OK: src/input.txt найден" || (echo "FAIL: src/input.txt отсутствует" && exit 1)
+          test -f result/gen.txt && echo "OK: result/gen.txt найден" || (echo "FAIL: result/gen.txt отсутствует" && exit 1)
+ 
+      - name: Check input.txt word count (>= 10000)
+        run: |
+          echo "=== Проверка объёма input.txt ==="
+          WORDS=$(python3 -c "
+          with open('src/input.txt', encoding='utf-8') as f:
+              text = f.read()
+          import re
+          words = re.findall(r'[А-Яа-яЁёA-Za-z]+', text)
+          print(len(words))
+          ")
+          echo "Слов в input.txt: $WORDS"
+          python3 -c "
+          count = $WORDS
+          assert count >= 10000, f'FAIL: input.txt содержит {count} слов, нужно >= 10000'
+          print(f'OK: input.txt содержит {count} слов (>= 10000)')
+          "
+ 
+      - name: Check gen.txt word count (>= 1000)
+        run: |
+          echo "=== Проверка объёма result/gen.txt ==="
+          WORDS=$(python3 -c "
+          with open('result/gen.txt', encoding='utf-8') as f:
+              text = f.read()
+          import re
+          words = re.findall(r'[А-Яа-яЁёA-Za-z]+', text)
+          print(len(words))
+          ")
+          echo "Слов в gen.txt: $WORDS"
+          python3 -c "
+          count = $WORDS
+          assert count >= 1000, f'FAIL: gen.txt содержит {count} слов, нужно >= 1000'
+          print(f'OK: gen.txt содержит {count} слов (>= 1000)')
+          "
+ 
+      - name: Check lstm.py syntax
+        run: |
+          echo "=== Проверка синтаксиса lstm.py ==="
+          python3 -m py_compile src/lstm.py && echo "OK: синтаксис lstm.py корректен" || (echo "FAIL: ошибка синтаксиса в lstm.py" && exit 1)
+ 
+      - name: Check lstm.py contains key components
+        run: |
+          echo "=== Проверка содержимого lstm.py ==="
+          python3 -c "
+          with open('src/lstm.py', encoding='utf-8') as f:
+              code = f.read()
+ 
+          checks = {
+              'LSTM':         'LSTM слой',
+              'Sequential':   'Sequential модель',
+              'word_to_index': 'пословный словарь (word_to_index)',
+              'max_length':   'параметр max_length',
+              'sample_index': 'функция sample_index (температура)',
+              'generate_text':'функция generate_text',
+              'model.fit':    'обучение модели (model.fit)',
+          }
+ 
+          failed = []
+          for key, label in checks.items():
+              if key in code:
+                  print(f'OK: найден компонент — {label}')
+              else:
+                  print(f'FAIL: не найден — {label}')
+                  failed.append(label)
+ 
+          if failed:
+              raise SystemExit(f'Отсутствуют компоненты: {failed}')
+          print('Все компоненты присутствуют.')
+          "
+ 
+      - name: Summary
+        run: |
+          echo ""
+          echo "================================"
+          echo "  Все проверки пройдены успешно!"
+          echo "================================"
