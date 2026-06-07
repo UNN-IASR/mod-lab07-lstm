@@ -2,9 +2,9 @@ name: Lab07 LSTM Check
  
 on:
   push:
-    branches: [ main, master ]
+    branches: [ main, master, b52 ]
   pull_request:
-    branches: [ main, master ]
+    branches: [ main, master, b52 ]
  
 jobs:
   check:
